@@ -1,155 +1,169 @@
+from pathlib import Path
+
 import numpy as np
 
-from core.matrix_operations import read_matrix, residual_norm
-from methods.iterative_solvers import seidel_method, simple_iteration
-from methods.jacobi_eigen import jacobi_rotation_eigen
-from methods.lu_decomposition import (
-    determinant_from_lu,
-    inverse_from_lu,
-    lu_decomposition,
-    solve_lu,
+from core.matrix_operations import (
+    multiplyMatrices,
+    readMatrixFromFile,
+    residualNorm,
+    splitAugmentedMatrix,
+    transpose,
 )
-from methods.qr_decomposition import qr_decomposition, qr_eigenvalues
-from methods.tridiagonal import thomas_algorithm, tridiagonal_to_matrix
+from methods.iterative_solvers import solveGauss, solveIteration, solveSeidel
+from methods.jacobi_eigen import JacobiRotationMethod
+from methods.lu_decomposition import (
+    LUDecomposition,
+    LUSolve,
+    calculateInverse,
+    determinantLU,
+)
+from methods.qr_decomposition import FindEigenvaluesQR, QRDecomposition
+from methods.tridiagonal import (
+    readTridiagonalMatrixFromFile,
+    solveTridiagonal,
+    tridiagonalToMatrix,
+)
 
 
-def print_section(title: str) -> None:
+DATA_DIR = Path(__file__).parent / "data"
+
+
+def printSection(title: str):
     print("\n" + "=" * 70)
     print(title)
     print("=" * 70)
 
 
-def run_lu_demo() -> None:
-    print_section("1.1 LU-разложение")
-    a, b = read_matrix("data/test.txt")
+def runLUExample():
+    printSection("1.1 LU-разложение")
+    fullMatrix = readMatrixFromFile(DATA_DIR / "lab1_1.txt")
+    matrix, b = splitAugmentedMatrix(fullMatrix)
 
-    l, u, p, swaps = lu_decomposition(a)
-    x = solve_lu(l, u, p, b)
-    determinant = determinant_from_lu(u, swaps)
-    inverse = inverse_from_lu(l, u, p)
+    l, u, p, permutationsCount = LUDecomposition(matrix)
+    x = LUSolve(l, u, p, b)
+    inverse = calculateInverse(l, u, p)
 
-    print("A:")
-    print(a)
-    print("b:", b)
+    print("Расширенная матрица [A | b]:")
+    print(fullMatrix)
     print("L:")
     print(l)
     print("U:")
     print(u)
-    print("P:")
-    print(p)
-    print("PA = LU:", np.allclose(p @ a, l @ u))
-    print("x:", x)
-    print("||Ax - b||:", residual_norm(a, x, b))
-    print("det(A):", determinant)
-    print("A^(-1):")
+    print("Решение Ax = b:", x)
+    print("Определитель A:", determinantLU(u, permutationsCount))
+    print("Обратная матрица A:")
     print(inverse)
-    print("A @ A^(-1) = I:", np.allclose(a @ inverse, np.eye(a.shape[0])))
+    print("Проверка P*A = L*U:", np.allclose(p @ matrix, l @ u))
+    print("Проверка A*A^(-1) = I:", np.allclose(matrix @ inverse, np.eye(matrix.shape[0])))
+    print("Норма невязки:", residualNorm(matrix, x, b))
 
 
-def run_tridiagonal_demo() -> None:
-    print_section("1.2 Метод прогонки")
-    lower = np.array([1.0, 1.0, 1.0])
-    diagonal = np.array([4.0, 4.0, 4.0, 4.0])
-    upper = np.array([1.0, 1.0, 1.0])
-    b = np.array([5.0, 6.0, 6.0, 5.0])
-
-    a = tridiagonal_to_matrix(lower, diagonal, upper)
-    x = thomas_algorithm(lower, diagonal, upper, b)
-
-    print("A:")
-    print(a)
-    print("b:", b)
-    print("x:", x)
-    print("||Ax - b||:", residual_norm(a, x, b))
-
-
-def run_iterative_demo() -> None:
-    print_section("1.3 Метод простых итераций и метод Зейделя")
-    a = np.array(
-        [
-            [10.0, 1.0, 1.0],
-            [2.0, 10.0, 1.0],
-            [2.0, 2.0, 10.0],
-        ]
+def runTridiagonalExample():
+    printSection("1.2 Метод прогонки")
+    fullMatrix = readMatrixFromFile(DATA_DIR / "lab1_2.txt")
+    upperDiag, mainDiag, lowerDiag, ansCol = readTridiagonalMatrixFromFile(
+        DATA_DIR / "lab1_2.txt"
     )
-    b = np.array([12.0, 13.0, 14.0])
-    eps = 1e-8
+    p, q, x = solveTridiagonal(upperDiag, mainDiag, lowerDiag, ansCol)
+    matrix = tridiagonalToMatrix(lowerDiag, mainDiag, upperDiag)
 
-    jacobi_x, jacobi_iterations, jacobi_history = simple_iteration(a, b, eps)
-    seidel_x, seidel_iterations, seidel_history = seidel_method(a, b, eps)
+    print("Расширенная матрица [A | b]:")
+    print(fullMatrix)
+    print("Коэффициенты прогонки:")
+    for i in range(len(p)):
+        print(f"P={p[i]:.6f} Q={q[i]:.6f}")
+    print("Решение Ax = b:", x)
+    print("Норма невязки:", residualNorm(matrix, x, ansCol))
 
-    print("A:")
-    print(a)
-    print("b:", b)
+
+def runIterationExample():
+    printSection("1.3 Метод простых итераций и метод Зейделя")
+    fullMatrix = readMatrixFromFile(DATA_DIR / "lab1_3.txt")
+    matrix, b = splitAugmentedMatrix(fullMatrix)
+    eps = 0.01
+
+    transposed = transpose(matrix)
+    symmetricMatrix = multiplyMatrices(transposed, matrix)
+    symmetricB = transposed @ b
+
+    exact = solveGauss(matrix, b)
+    iterationX, iterationCount, iterationHistory = solveIteration(
+        symmetricMatrix, symmetricB, eps
+    )
+    seidelX, seidelCount, seidelHistory = solveSeidel(
+        symmetricMatrix, symmetricB, eps
+    )
+
+    print("Расширенная матрица [A | b]:")
+    print(fullMatrix)
     print("Точность:", eps)
-    print("Метод простых итераций:")
-    print("x:", jacobi_x)
-    print("итераций:", jacobi_iterations)
-    print("последняя оценка ошибки:", jacobi_history[-1])
-    print("Метод Зейделя:")
-    print("x:", seidel_x)
-    print("итераций:", seidel_iterations)
-    print("последняя оценка ошибки:", seidel_history[-1])
+    print("Эталонное решение:", exact)
+    print("Метод простых итераций:", iterationX)
+    print("Количество итераций:", iterationCount)
+    print("Последняя оценка ошибки:", iterationHistory[-1])
+    print("Метод Зейделя:", seidelX)
+    print("Количество итераций:", seidelCount)
+    print("Последняя оценка ошибки:", seidelHistory[-1])
+    if seidelCount < iterationCount:
+        print("Метод Зейделя быстрее на", iterationCount - seidelCount, "итераций")
+    elif iterationCount < seidelCount:
+        print("Метод простых итераций быстрее на", seidelCount - iterationCount, "итераций")
+    else:
+        print("Методы выполнили одинаковое количество итераций")
 
 
-def run_jacobi_eigen_demo() -> None:
-    print_section("1.4 Метод вращений Якоби")
-    a = np.array(
-        [
-            [4.0, 1.0, 1.0],
-            [1.0, 3.0, 0.0],
-            [1.0, 0.0, 2.0],
-        ]
-    )
-    eps = 1e-8
+def runJacobiExample():
+    printSection("1.4 Метод вращений Якоби")
+    matrix = readMatrixFromFile(DATA_DIR / "lab1_4.txt")
+    eps = 0.01
+    eigenvalues, eigenvectors, iterations, history = JacobiRotationMethod(matrix, eps)
 
-    eigenvalues, eigenvectors, iterations, history = jacobi_rotation_eigen(a, eps)
-
-    print("A:")
-    print(a)
+    print("Матрица A из файла:")
+    print(matrix)
+    print("Точность:", eps)
     print("Собственные значения:", eigenvalues)
     print("Собственные векторы:")
     print(eigenvectors)
-    print("итераций:", iterations)
-    print("финальная погрешность:", history[-1])
-    print("Проверка A V = V Lambda:", np.allclose(a @ eigenvectors, eigenvectors @ np.diag(eigenvalues)))
-
-
-def run_qr_demo() -> None:
-    print_section("1.5 QR-разложение и QR-алгоритм")
-    a = np.array(
-        [
-            [1.0, 2.0, 3.0],
-            [4.0, 5.0, 6.0],
-            [7.0, 8.0, 10.0],
-        ]
+    print("Количество итераций:", iterations)
+    print("Последняя оценка ошибки:", history[-1])
+    print(
+        "Проверка A*V = V*Lambda:",
+        np.allclose(matrix @ eigenvectors, eigenvectors @ np.diag(eigenvalues), atol=eps),
     )
-    eps = 1e-8
 
-    q, r = qr_decomposition(a)
-    eigenvalues, iterations, history = qr_eigenvalues(a, eps)
 
-    print("A:")
-    print(a)
+def runQRExample():
+    printSection("1.5 QR-разложение и QR-алгоритм")
+    matrix = readMatrixFromFile(DATA_DIR / "lab1_5.txt")
+    complexExample = readMatrixFromFile(DATA_DIR / "lab1_5_complex.txt")
+    eps = 0.01
+
+    q, r = QRDecomposition(matrix)
+    eigenvalues, iterations, history = FindEigenvaluesQR(matrix, eps)
+    complexEigenvalues, _, _ = FindEigenvaluesQR(complexExample, eps)
+
+    print("Матрица A из файла:")
+    print(matrix)
     print("Q:")
     print(q)
     print("R:")
     print(r)
-    print("Q @ R = A:", np.allclose(q @ r, a))
-    print("Q^T @ Q = I:", np.allclose(q.T @ q, np.eye(a.shape[0])))
+    print("Проверка Q*R = A:", np.allclose(q @ r, matrix))
     print("Собственные значения:", eigenvalues)
-    print("итераций:", iterations)
-    print("финальная погрешность:", history[-1])
+    print("Количество QR-итераций:", iterations)
+    print("Последняя оценка ошибки:", history[-1])
+    print("Матрица с комплексными собственными значениями из файла:")
+    print(complexExample)
+    print("Собственные значения:", complexEigenvalues)
 
 
-def main() -> None:
+def main():
     np.set_printoptions(precision=6, suppress=True)
-
-    run_lu_demo()
-    run_tridiagonal_demo()
-    run_iterative_demo()
-    run_jacobi_eigen_demo()
-    run_qr_demo()
+    runLUExample()
+    runTridiagonalExample()
+    runIterationExample()
+    runJacobiExample()
+    runQRExample()
 
 
 if __name__ == "__main__":

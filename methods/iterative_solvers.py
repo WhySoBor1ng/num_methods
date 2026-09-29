@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def _validate_system(a: np.ndarray, b: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+def _validateSystem(a: np.ndarray, b: np.ndarray):
     a = np.array(a, dtype=float)
     b = np.array(b, dtype=float)
 
@@ -15,22 +15,37 @@ def _validate_system(a: np.ndarray, b: np.ndarray) -> tuple[np.ndarray, np.ndarr
     return a, b
 
 
-def simple_iteration(
+def getQ(a: np.ndarray):
+    a, _ = _validateSystem(a, np.zeros(len(a)))
+    q = 0.0
+    for i in range(a.shape[0]):
+        rowSum = np.sum(np.abs(a[i])) - abs(a[i, i])
+        q = max(q, float(rowSum / abs(a[i, i])))
+    return q
+
+
+def solveGauss(a: np.ndarray, b: np.ndarray):
+    return np.linalg.solve(np.array(a, dtype=float), np.array(b, dtype=float))
+
+
+def solveIteration(
     a: np.ndarray,
     b: np.ndarray,
     eps: float = 1e-6,
     max_iterations: int = 10000,
     x0: np.ndarray | None = None,
-) -> tuple[np.ndarray, int, list[float]]:
-    a, b = _validate_system(a, b)
+):
+    a, b = _validateSystem(a, b)
     x = np.zeros_like(b) if x0 is None else np.array(x0, dtype=float)
     diagonal = np.diag(a)
     remainder = a - np.diagflat(diagonal)
     history: list[float] = []
+    q = getQ(a)
 
     for iteration in range(1, max_iterations + 1):
         x_new = (b - remainder @ x) / diagonal
-        error = float(np.linalg.norm(x_new - x, ord=np.inf))
+        maxDiff = float(np.linalg.norm(x_new - x, ord=np.inf))
+        error = q / (1.0 - q) * maxDiff if q < 1.0 else maxDiff
         history.append(error)
 
         if error < eps:
@@ -41,16 +56,17 @@ def simple_iteration(
     raise RuntimeError("Simple iteration method did not converge")
 
 
-def seidel_method(
+def solveSeidel(
     a: np.ndarray,
     b: np.ndarray,
     eps: float = 1e-6,
     max_iterations: int = 10000,
     x0: np.ndarray | None = None,
-) -> tuple[np.ndarray, int, list[float]]:
-    a, b = _validate_system(a, b)
+):
+    a, b = _validateSystem(a, b)
     x = np.zeros_like(b) if x0 is None else np.array(x0, dtype=float)
     history: list[float] = []
+    q = getQ(a)
 
     for iteration in range(1, max_iterations + 1):
         x_old = x.copy()
@@ -60,10 +76,15 @@ def seidel_method(
             right = np.dot(a[i, i + 1:], x_old[i + 1:])
             x[i] = (b[i] - left - right) / a[i, i]
 
-        error = float(np.linalg.norm(x - x_old, ord=np.inf))
+        maxDiff = float(np.linalg.norm(x - x_old, ord=np.inf))
+        error = q / (1.0 - q) * maxDiff if q < 1.0 else maxDiff
         history.append(error)
 
         if error < eps:
             return x, iteration, history
 
     raise RuntimeError("Seidel method did not converge")
+
+
+simple_iteration = solveIteration
+seidel_method = solveSeidel

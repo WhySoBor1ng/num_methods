@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def lu_decomposition(a: np.ndarray):
+def LUDecomposition(a: np.ndarray):
     a = np.array(a, dtype=float, copy=True)
     if a.ndim != 2 or a.shape[0] != a.shape[1]:
         raise ValueError("Non-square matrix")
@@ -72,7 +72,7 @@ def backward_substitution(u, y):
     return x
 
 
-def solve_lu(l, u, p, b):
+def LUSolve(l, u, p, b):
     pb = p @ b
 
     y = forward_substitution(l, pb)
@@ -81,19 +81,26 @@ def solve_lu(l, u, p, b):
     return x
 
 
-def determinant_from_lu(u, swaps_count):
+def determinantLU(u, swaps_count):
     return float((-1) ** swaps_count * np.prod(np.diag(u)))
 
 
-def inverse_from_lu(l, u, p):
+def calculateInverse(l, u, p):
     n = l.shape[0]
     inverse = np.zeros((n, n))
 
     i = np.eye(n)
 
     for j in range(n):
-        inverse[:, j] = solve_lu(
+        inverse[:, j] = LUSolve(
             l, u, p, i[:, j]
         )
 
     return inverse
+
+
+# Compatibility aliases for earlier versions of the work.
+lu_decomposition = LUDecomposition
+solve_lu = LUSolve
+determinant_from_lu = determinantLU
+inverse_from_lu = calculateInverse
