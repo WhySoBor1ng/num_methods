@@ -2,7 +2,6 @@ import numpy as np
 
 
 def QRDecomposition(a: np.ndarray):
-    """Compute QR decomposition with Householder reflections."""
     a = np.array(a, dtype=float, copy=True)
     m, n = a.shape
     q = np.eye(m)
@@ -120,7 +119,3 @@ def FindEigenvaluesQR(
         raise RuntimeError("QR algorithm did not converge")
 
     return ExtractEigenvalues(current, eps), iterations, history
-
-
-qr_decomposition = QRDecomposition
-qr_eigenvalues = FindEigenvaluesQR

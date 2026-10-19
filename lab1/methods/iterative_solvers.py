@@ -24,10 +24,6 @@ def getQ(a: np.ndarray):
     return q
 
 
-def solveGauss(a: np.ndarray, b: np.ndarray):
-    return np.linalg.solve(np.array(a, dtype=float), np.array(b, dtype=float))
-
-
 def solveIteration(
     a: np.ndarray,
     b: np.ndarray,
@@ -84,7 +80,3 @@ def solveSeidel(
             return x, iteration, history
 
     raise RuntimeError("Seidel method did not converge")
-
-
-simple_iteration = solveIteration
-seidel_method = solveSeidel

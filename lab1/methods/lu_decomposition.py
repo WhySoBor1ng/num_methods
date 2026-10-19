@@ -97,10 +97,3 @@ def calculateInverse(l, u, p):
         )
 
     return inverse
-
-
-# Compatibility aliases for earlier versions of the work.
-lu_decomposition = LUDecomposition
-solve_lu = LUSolve
-determinant_from_lu = determinantLU
-inverse_from_lu = calculateInverse

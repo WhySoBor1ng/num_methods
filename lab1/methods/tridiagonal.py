@@ -1,7 +1,9 @@
+from os import PathLike
+
 import numpy as np
 
 
-def readTridiagonalMatrixFromFile(path: str):
+def readTridiagonalMatrixFromFile(path: str | PathLike[str]):
     fullMatrix = np.loadtxt(path, dtype=float)
     if fullMatrix.ndim != 2 or fullMatrix.shape[1] != fullMatrix.shape[0] + 1:
         raise ValueError("Expected an augmented matrix [A | b]")
@@ -56,22 +58,3 @@ def solveTridiagonal(
         xNext = x[i]
 
     return p, q, x
-
-
-def tridiagonalToMatrix(
-    lower: np.ndarray,
-    diagonal: np.ndarray,
-    upper: np.ndarray,
-):
-    b = np.array(diagonal, dtype=float)
-    matrix = np.diag(b)
-    matrix += np.diag(np.array(lower, dtype=float), k=-1)
-    matrix += np.diag(np.array(upper, dtype=float), k=1)
-    return matrix
-
-
-def thomas_algorithm(lower, diagonal, upper, rhs):
-    return solveTridiagonal(upper, diagonal, lower, rhs)[2]
-
-
-tridiagonal_to_matrix = tridiagonalToMatrix

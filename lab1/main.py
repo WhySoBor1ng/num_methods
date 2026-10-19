@@ -3,13 +3,10 @@ from pathlib import Path
 import numpy as np
 
 from core.matrix_operations import (
-    multiplyMatrices,
     readMatrixFromFile,
-    residualNorm,
     splitAugmentedMatrix,
-    transpose,
 )
-from methods.iterative_solvers import solveGauss, solveIteration, solveSeidel
+from methods.iterative_solvers import solveIteration, solveSeidel
 from methods.jacobi_eigen import JacobiRotationMethod
 from methods.lu_decomposition import (
     LUDecomposition,
@@ -21,7 +18,6 @@ from methods.qr_decomposition import FindEigenvaluesQR, QRDecomposition
 from methods.tridiagonal import (
     readTridiagonalMatrixFromFile,
     solveTridiagonal,
-    tridiagonalToMatrix,
 )
 
 
@@ -55,7 +51,7 @@ def runLUExample():
     print(inverse)
     print("Проверка P*A = L*U:", np.allclose(p @ matrix, l @ u))
     print("Проверка A*A^(-1) = I:", np.allclose(matrix @ inverse, np.eye(matrix.shape[0])))
-    print("Норма невязки:", residualNorm(matrix, x, b))
+    print("Норма невязки:", np.linalg.norm(matrix @ x - b, ord=np.inf))
 
 
 def runTridiagonalExample():
@@ -65,7 +61,7 @@ def runTridiagonalExample():
         DATA_DIR / "lab1_2.txt"
     )
     p, q, x = solveTridiagonal(upperDiag, mainDiag, lowerDiag, ansCol)
-    matrix = tridiagonalToMatrix(lowerDiag, mainDiag, upperDiag)
+    matrix = fullMatrix[:, :-1]
 
     print("Расширенная матрица [A | b]:")
     print(fullMatrix)
@@ -73,7 +69,7 @@ def runTridiagonalExample():
     for i in range(len(p)):
         print(f"P={p[i]:.6f} Q={q[i]:.6f}")
     print("Решение Ax = b:", x)
-    print("Норма невязки:", residualNorm(matrix, x, ansCol))
+    print("Норма невязки:", np.linalg.norm(matrix @ x - ansCol, ord=np.inf))
 
 
 def runIterationExample():
@@ -82,11 +78,11 @@ def runIterationExample():
     matrix, b = splitAugmentedMatrix(fullMatrix)
     eps = 0.01
 
-    transposed = transpose(matrix)
-    symmetricMatrix = multiplyMatrices(transposed, matrix)
+    transposed = matrix.T
+    symmetricMatrix = transposed @ matrix
     symmetricB = transposed @ b
 
-    exact = solveGauss(matrix, b)
+    exact = np.linalg.solve(matrix, b)
     iterationX, iterationCount, iterationHistory = solveIteration(
         symmetricMatrix, symmetricB, eps
     )

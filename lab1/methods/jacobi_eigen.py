@@ -58,6 +58,3 @@ def JacobiRotationMethod(
         eigenvectors = eigenvectors @ rotation
 
     raise RuntimeError("Jacobi rotation method did not converge")
-
-
-jacobi_rotation_eigen = JacobiRotationMethod
