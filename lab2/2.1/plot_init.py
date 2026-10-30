@@ -8,15 +8,15 @@ OUTPUT_PATH = Path(__file__).with_name("graphic.png")
 
 
 def main():
-    x = np.linspace(1.5, 1.8, 500)
-    y1 = 4.0**x
-    y2 = 5.0 * x + 2.0
+    x = np.linspace(1.0, 1.8, 500)
+    y1 = np.cos(x) + 0.25 * x
+    y2 = np.full_like(x, 0.5)
 
     plt.figure(figsize=(11, 7))
-    plt.plot(x, y1, label="y = 4^x")
-    plt.plot(x, y2, label="y = 5x + 2")
-    plt.xlim(1.5, 1.8)
-    plt.ylim(8.5, 12.5)
+    plt.plot(x, y1, label="y = cos(x) + 0.25x")
+    plt.plot(x, y2, label="y = 0.5")
+    plt.xlim(1.0, 1.8)
+    plt.ylim(0.15, 0.9)
     plt.grid(True)
     plt.xlabel("x")
     plt.ylabel("y")

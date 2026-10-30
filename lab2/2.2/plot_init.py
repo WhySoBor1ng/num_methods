@@ -5,22 +5,22 @@ import numpy as np
 
 
 OUTPUT_PATH = Path(__file__).with_name("graphic.png")
+A = 2.0
 
 
 def main():
-    x = np.linspace(0.2, 0.45, 500)
-    first_equation_x = x[(3.0 * x >= -1.0) & (3.0 * x <= 1.0)]
-    first_equation_y = np.arccos(3.0 * first_equation_x)
-    second_equation_y = np.exp(x) / 3.0
+    x = np.linspace(0.2, 0.8, 500)
+    first_equation_y = np.arccos(x - 1.0)
+    second_equation_y = A + np.log10(x + 1.0)
 
     plt.figure(figsize=(11, 7))
-    plt.plot(first_equation_x, first_equation_y, label="3x - cos(y) = 0")
-    plt.plot(x, second_equation_y, label="3y - e^x = 0")
-    plt.xlim(0.2, 0.45)
-    plt.ylim(0.35, 0.6)
+    plt.plot(x, first_equation_y, label="x1 - cos(x2) = 1")
+    plt.plot(x, second_equation_y, label="x2 - lg(x1 + 1) = 2")
+    plt.xlim(0.2, 0.8)
+    plt.ylim(1.8, 2.5)
     plt.grid(True)
-    plt.xlabel("x")
-    plt.ylabel("y")
+    plt.xlabel("x1")
+    plt.ylabel("x2")
     plt.legend(loc="upper right")
     plt.tight_layout()
     plt.savefig(OUTPUT_PATH, dpi=160)

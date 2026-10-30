@@ -1,20 +1,21 @@
-from math import log
+from math import acos, cos, sin
 
 
 def f(x: float):
-    return 4.0**x - 5.0 * x - 2.0
+    return cos(x) + 0.25 * x - 0.5
 
 
 def df(x: float):
-    return log(4.0) * 4.0**x - 5.0
+    return -sin(x) + 0.25
 
 
 def phi(x: float):
-    return log(5.0 * x + 2.0) / log(4.0)
+    return acos(0.5 - 0.25 * x)
 
 
 def dphi(x: float):
-    return 5.0 / ((5.0 * x + 2.0) * log(4.0))
+    value = 0.5 - 0.25 * x
+    return 0.25 / (1.0 - value**2) ** 0.5
 
 
 def simple_iteration(x: float, eps: float, max_iterations: int = 1000):
@@ -53,11 +54,11 @@ def read_eps():
 
 
 def main():
-    print("4^x - 5x - 2 = 0")
+    print("cos(x) + 0.25x - 0.5 = 0")
     eps = read_eps()
 
-    x0 = 1.68
-    print("phi(x) = log_4(5x + 2)")
+    x0 = 1.4
+    print("phi(x) = arccos(0.5 - 0.25x)")
     print(f"|phi'(x0)| = {abs(dphi(x0)):.6f} < 1\n")
 
     iteration_root, iteration_count = simple_iteration(x0, eps)
