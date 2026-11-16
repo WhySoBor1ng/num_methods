@@ -45,7 +45,6 @@ def LUDecomposition(a: np.ndarray):
     
     return l, u, p, swaps_count
 
-
 def forward_substitution(l, b):
     l = np.array(l, dtype=float)
     b = np.array(b, dtype=float)
@@ -56,7 +55,6 @@ def forward_substitution(l, b):
         y[i] = b[i] - np.dot(l[i, :i], y[:i])
 
     return y
-
 
 def backward_substitution(u, y):
     u = np.array(u, dtype=float)
@@ -71,7 +69,6 @@ def backward_substitution(u, y):
 
     return x
 
-
 def LUSolve(l, u, p, b):
     pb = p @ b
 
@@ -80,10 +77,8 @@ def LUSolve(l, u, p, b):
 
     return x
 
-
 def determinantLU(u, swaps_count):
     return float((-1) ** swaps_count * np.prod(np.diag(u)))
-
 
 def calculateInverse(l, u, p):
     n = l.shape[0]

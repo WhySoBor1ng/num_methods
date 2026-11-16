@@ -5,12 +5,10 @@ def OffDiagonalNorm(matrix: np.ndarray):
     upper = np.triu(np.array(matrix, dtype=float), k=1)
     return float(np.sqrt(np.sum(upper**2)))
 
-
 def _max_off_diagonal_index(a: np.ndarray):
     upper = np.triu(np.abs(a), k=1)
     index = int(np.argmax(upper))
     return np.unravel_index(index, a.shape)
-
 
 def RotationMatrix(matrix: np.ndarray, i: int, j: int):
     matrix = np.array(matrix, dtype=float)
@@ -27,7 +25,6 @@ def RotationMatrix(matrix: np.ndarray, i: int, j: int):
     rotationMatrix[i, j] = -sinPhi
     rotationMatrix[j, i] = sinPhi
     return rotationMatrix
-
 
 def JacobiRotationMethod(
     a: np.ndarray,

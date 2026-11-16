@@ -5,13 +5,12 @@ import numpy as np
 
 
 OUTPUT_PATH = Path(__file__).with_name("graphic.png")
-A = 2.0
 
 
 def main():
     x = np.linspace(0.2, 0.8, 500)
     first_equation_y = np.arccos(x - 1.0)
-    second_equation_y = A + np.log10(x + 1.0)
+    second_equation_y = 2 + np.log10(x + 1.0)
 
     plt.figure(figsize=(11, 7))
     plt.plot(x, first_equation_y, label="x1 - cos(x2) = 1")

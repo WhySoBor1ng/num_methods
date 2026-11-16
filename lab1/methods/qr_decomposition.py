@@ -27,29 +27,13 @@ def QRDecomposition(a: np.ndarray):
     r[np.isclose(r, 0.0)] = 0.0
     return q, r
 
-
 def VectorNormFrom(matrix: np.ndarray, column: int, startRow: int):
     return float(np.linalg.norm(matrix[startRow:, column]))
-
 
 def _quasiTriangularError(a: np.ndarray):
     if a.shape[0] <= 2:
         return 0.0
     return float(np.linalg.norm(np.tril(a, k=-2), ord="fro"))
-
-
-def _hasOnly1x1And2x2Blocks(a: np.ndarray, eps: float):
-    i = 0
-    n = a.shape[0]
-    while i < n - 1:
-        if abs(a[i + 1, i]) < eps:
-            i += 1
-        else:
-            if i + 2 < n and abs(a[i + 2, i + 1]) >= eps:
-                return False
-            i += 2
-    return True
-
 
 def Eigenvalues2x2(a: float, b: float, c: float, d: float):
     trace = a + d
@@ -57,7 +41,6 @@ def Eigenvalues2x2(a: float, b: float, c: float, d: float):
     discriminant = trace**2 - 4 * determinant
     root = np.sqrt(complex(discriminant))
     return (trace + root) / 2, (trace - root) / 2
-
 
 def ExtractEigenvalues(a: np.ndarray, eps: float):
     eigenvalues: list[complex] = []
@@ -78,7 +61,6 @@ def ExtractEigenvalues(a: np.ndarray, eps: float):
         return result.real
     return result
 
-
 def IsQRIterationFinished(current: np.ndarray, previous: np.ndarray, eps: float):
     i = 0
     while i < current.shape[0] - 1:
@@ -91,7 +73,6 @@ def IsQRIterationFinished(current: np.ndarray, previous: np.ndarray, eps: float)
             return False
         i += 2
     return True
-
 
 def FindEigenvaluesQR(
     a: np.ndarray,
